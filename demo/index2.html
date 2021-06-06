@@ -1,0 +1,86 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>vue source</title>
+  <script src="./node_modules/vue/dist/vue.js"></script>
+</head>
+<body>
+  <h1>Vue模拟--通过 new 一个vue实例实现 数据驱动</h1>
+  
+  <!-- 1. 页面模版 -->
+  <div id="root">{{name}}--{{msg}}</div>
+  <script>
+    // 2. Vue执行流程（实例）
+
+    // 将数据替换到模版中
+    function compiler(tpl, data) {
+      const rule = /\{\{(.+?)\}\}/g
+      let childNodes = tpl.childNodes //子元素
+      for (let i = 0; i < childNodes.length; i++) {
+        let nodeType = childNodes[i].nodeType
+        // 1-元素 3-文本节点
+        if (nodeType === 3) {
+          // 文本节点 直接判断有没插值表达式 {{}}
+          let txt = childNodes[i].nodeValue
+          // replace使用正则匹配一次，函数就调用一次
+          // 函数第 0 个参数表示匹配到的内容
+          // 函数第 n 个参数表示正则中的第n组
+          txt = txt.replace(rule, function(_, g) {
+            let k = g.trim()
+            value = data[k]
+            return value
+          })
+          // txt现在和DOM是没有关系的
+          childNodes[i].nodeValue = txt
+          console.log(11, txt)
+        } else if (nodeType === 1) {
+          // 递归
+          compiler(childNodes[i], data)
+        }
+      }
+    }
+
+    // 构造函数
+    function JGVue(option) {
+      this._el = option.el
+      this._data = option.data
+      // 准备模版
+      this.$el = this._templateDOM = document.querySelector(this._el)
+      this._parent = this._templateDOM.parentNode
+      // 渲染
+      this.render()
+    }
+
+    // 2.1 渲染 得到html放到页面中
+    JGVue.prototype.render = function() {
+      this.compiler()
+    }
+    // 2.2 模版数据结合得到真正DOM元素
+    JGVue.prototype.compiler = function() {
+      // 用模版拷贝得到一个 准DOM
+      let realHTMLDOM = this._templateDOM.cloneNode(true)
+      compiler(realHTMLDOM, this._data)
+      this.update(realHTMLDOM)
+    }
+    // 将DOM元素替换到页面中
+    JGVue.prototype.update = function(real) { 
+      this._parent.replaceChild(real, this.$el)
+    }
+
+    // 调用
+    let data = {
+      name: 'Vue source',
+      msg: 'Hello'
+    }
+    new JGVue({
+      el: '#root',
+      data
+    })
+
+    // 3.挂载vue实例到模版 
+  </script>
+</body>
+</html>

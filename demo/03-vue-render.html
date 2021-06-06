@@ -1,0 +1,181 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>vue source</title>
+  <script src="./node_modules/vue/dist/vue.js"></script>
+</head>
+<body>
+  <h1>模拟Vue源码</h1>
+  <h3>实现一个Vue-render方法</h3>
+  
+  <div id="app">
+    <h2 id="title">{{title}}</h2>
+    <div class="list">
+      <ul>
+        <li>{{info.code}}</li>
+        <li>{{info.msg}}</li>
+      </ul>
+    </div>
+  </div>
+
+  <script>  
+    // 生成虚拟dom-构造函数
+    function VNode(nodeName, nodeValue, nodeType, attributes) {
+      this._nodeName = nodeName && nodeName.toLowerCase()
+      this._nodeValue = nodeValue
+      this._nodeType = nodeType
+      this._attributes = attributes
+      this.childNodes = []
+    }
+    VNode.prototype.appendChild = function (vnode) {
+      this.childNodes.push(vnode)
+    }
+    // 真实dom 转 虚拟dom
+    function createVNode(node) {
+      let nodeType = node.nodeType
+      let _vnode = null
+      if (nodeType === 1) {
+        let nodeName = node.nodeName
+        let childNodes = node.childNodes
+        let attributes = node.attributes
+        let _attrObj = {}
+        // [].slice.call(attributes)
+        ;[...attributes].forEach(attr => {
+          _attrObj[attr.nodeName] = attr.nodeValue
+        })
+        _vnode = new VNode(nodeName, undefined, nodeType, _attrObj)
+        childNodes.forEach(ele => {
+          _vnode.appendChild(createVNode(ele))
+        })
+      } else if (nodeType === 3) {
+        _vnode = new VNode(undefined, node.nodeValue, nodeType, undefined)
+      }
+      return _vnode
+    }
+    // 虚拟dom 转 真实dom
+    function parseNode(vnode) {
+      let nodeType = vnode._nodeType
+      let _node = null
+      if (nodeType === 1) {
+        let nodeName = vnode._nodeName
+        let attributes = vnode._attributes
+        let childNodes = vnode.childNodes
+        _node = document.createElement(nodeName)
+        for(k in attributes) {
+          _node.setAttribute(k, attributes[k])
+        }
+        childNodes.forEach(child => {
+          _node.appendChild(parseNode(child))
+        })
+      } else if (nodeType === 3) {
+        return document.createTextNode(vnode._nodeValue)
+      }
+      return _node
+    }
+
+    let vapp = createVNode(document.querySelector('#app'))
+    let app = parseNode(vapp)
+    console.log('DOM -> VNode', vapp)
+    console.log('VNode -> DOM', app)
+
+    // 模拟Vue 构造函数
+    function JGVue(option) {
+      this._data = option.data
+      this._el = option.el
+      this.$el = this._template = document.querySelector(option.el)
+      this._parentNode = this._template.parentNode
+
+      // 挂载方法
+      this.mount()
+    }
+    
+    JGVue.prototype.mount = function () {
+      // 需要一个render方法，生成 VNode
+      // Vue中：render方法是可以自定义的，不定义会自动生成
+      // 此案例中：简化，
+      this.render = this.createRender()
+      // 挂载方法
+      this.mountComponent()
+    }
+    
+    JGVue.prototype.mountComponent = function () {
+      // 这里的render返回 带有数据的VNode（新）
+      let mount = () => {
+        this.update(this.render())
+      }
+      mount()
+      // Vue中：使用发布订阅模式，渲染和计算的行为应交给watcher来完成
+    }
+
+    // 生成render方法，
+    // Vue中：作用是缓存抽象语法树
+    // 此案例中：我们使用 VNode 模拟 抽象语法树（AST）
+    JGVue.prototype.createRender = function () {
+      // 这里使用函数柯里化，将 抽象语法树 缓存起来了
+      let ast = createVNode(this._template)
+      // Vue中：AST + data =》VNode
+      // 此案例中：带插值的VNode + data =》带数据的VNode
+      return function render() {
+        // 返回一个 新的VNode，用于和 VNode 通过diff算法比较 更新 VNode
+        return compiler(ast, this._data)
+      }
+    }
+    
+    // 将VNode渲染到页面，diff算法就在这一步 
+    JGVue.prototype.update = function (vnode) {
+      // 此案例中：简化，
+      // 生成真实dom
+      let _node = parseNode(vnode)
+      // Vue中：刷新页面使用diff算法，局部替换dom
+      // 此案例中：简化，每次会将页面中 dom 全部替换，因此每次都要重新获取dom
+      this._parentNode.replaceChild(_node, document.querySelector('#app'))
+    }
+    
+    // 插值表达式解析方法-模版与数据结合
+    function compiler(template, data) {
+      const rule = /\{\{(.+?)\}\}/g
+      // let _vnode = null
+      let childNodes = template.childNodes
+      childNodes.forEach(el => {
+        let { _nodeType, _nodeValue } = el
+        if (_nodeType === 1) {
+          compiler(el, data)
+        } else if (_nodeType === 3) {
+          let txt = _nodeValue.replace(rule, (_, g) => {
+            let path = g.trim()
+            // return data[path]
+            return getValueByPath(data, path)
+          })
+          el._nodeValue = txt
+        }
+      })
+      return template
+    }
+    // 获取插值表达式中 变量 在 data 中的值（满足链式调用 xx.yy. ··· nn）
+    function getValueByPath(data, path) {
+      let paths = path.split('.')
+      let k
+      let obj = data
+      while(k = paths.shift()) {
+        obj = obj[k]
+      }
+      return obj
+    }
+
+    let data = {
+      title: 'Vue source',
+      info: {
+        code: 03,
+        msg: '模拟Vue源码'
+      }
+    }
+    new JGVue({
+      el: '#app',
+      data
+    })
+  </script>
+</body>
+</html>

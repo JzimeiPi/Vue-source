@@ -1,0 +1,48 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>JGvue</title>
+</head>
+<body>
+  <div id="app">
+    <div class="name">{{name}}</div>
+    <div class="age">{{age}}</div>
+    <ul id="ls">
+      <li>{{info.code}}</li>
+      <li>{{info.msg}}</li>
+    </ul>
+  </div>
+
+  <script src="./watcher.js"></script>
+  <script src="./dep.js"></script>
+  <script src="./vnode.js"></script>
+  <script src="./createVNode.js"></script>
+  <script src="./parseNode.js"></script>
+  <script src="./compiler.js"></script>
+  <script src="./vue.js"></script>
+  <script src="./initRender.js"></script>
+  <script src="./initData.js"></script>
+  <!--  -->
+  <script>
+    let data = {
+      name: 'Vue source',
+      age: 11,
+      info: {
+        code: 03,
+        msg: '模拟Vue源码'
+      },
+      ls: [
+        {name: 'zs'},
+        {name: 'ls'}
+      ]
+    }
+    const app = new JGVue({
+      el: '#app',
+      data
+    })
+  </script>
+</body>
+</html>

@@ -1,0 +1,146 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>responsive 响应式</title>
+</head>
+<body>
+  <h1>Vue中数据响应式处理：</h1>
+  <h3>响应式实现：Object.defineProperty</h3>
+
+  <script>
+    let data = {
+      name: 'ls',
+      age: 18
+    }
+    // let _name = ''  // 中间变量，同步属性值
+    // Object.defineProperty(data, 'name', {
+    //   get() {
+    //     // 执行data.name = 'zs'，调用get方法读取值（使用getter读取器）
+    //     return _name
+    //   },
+    //   set(value) {  
+    //     // 执行data.name = 'ls'，调用set方法，值作为参数传入
+    //     _name = value
+    //   }
+    // })
+    // 以上代码断问题：
+    // 1、如果要同时使用get、set就需要一个中间变量存储真正的数据
+    // 2、这个中间变量会暴露在全局作用域 这样不安全
+
+    // Vue中解决方法：
+    // 使用 defineReactive(target, key, value, enumerable)
+
+    function defineReactive(target, key, value, enumerable) {
+      // value 就是中间变量 函数作用域 （闭包）
+      // 如果是 引用类型，且不是数组，递归
+      if (typeof value === 'object'
+        && value !== null
+        && !Array.isArray(value)
+      ) {
+        setData(value)
+      }
+      Object.defineProperty(target, key, {
+        configurable: true,
+        enumerable: !!enumerable,
+        get() {
+          return value
+        },
+        set(newValue) {
+          value = newValue
+          // 解决赋值时响应式化
+          setData(value)
+          // Vue 2.x中：数组本身是没办法响应式化的，所以给数组赋值，新的值不会响应式化
+        }
+      })
+    }
+    // 设置对象为响应式
+    for(let k in data) {
+      defineReactive(data, k, data[k], true)
+    }
+    //1、data 处理为 响应式，这里的data只有一层结构
+    console.log(data)
+    // 2、层级复杂的数据如何实现响应式？？？
+    // 递归，也可使用 队列 （深度优先转换为广度优先）
+    let info = {
+      title: 'Vue',
+      name: '响应式',
+      list: [
+        {name: 'aa'},
+        {name: 'aa'},
+      ],
+      obj: {
+        code: 1,
+        msg: 'a'
+      }
+    }
+    
+    // 处理对象响应式方法
+    function setData(data) {
+      // 2.1.判断是数组，循环设置响应式
+      // 2.2.判断是引用类型，且不是数组，递归
+      let keys = Object.keys(data)
+      keys.forEach(k => {
+        let v = data[k]
+        if (Array.isArray(v)) {
+          v.__proto__ = setArrMethodsByProto()
+          v.forEach(o => {
+            setData(o)
+          })
+        } else {
+          defineReactive(data, k, v, true)
+        }
+      })
+    }
+    setData(info)
+    console.log(info)
+    // 3、目前只实现了对象响应式化，数组如何处理？？？
+    // push、pop、unshift、shift、splice、sort、reverse --Vue源码提供的方法
+    // 实现效果：
+    //    3.1.改变数组数据时，发出通知
+    //    3.2.push 来的数据也要响应式化
+    // 实现技巧： 对一个已经定义了的函数进行扩展
+    //  -1.使用临时名存储定义了的函数
+    //  -2.重新定义原来的函数
+    //  -3.定义扩展功能
+    //  -4.调用临时函数
+    
+    // 处理数组中以下方法响应式化
+    // 思路：原型式继承 ：修改原型链的结构
+    function setArrMethodsByProto() {
+      let ARRAY_METHODS = [
+        'push',
+        'pop',
+        'unshift',
+        'shift',
+        'splice',
+        'sort',
+        'reverse'
+      ] 
+      // 继承关系：arr -> Array.prototype -> Object.prototype -> ...
+      // 继承关系：arr -> 在这里改写 -> Array.prototype -> Object.prototype -> ...
+      
+      let array_methods = Object.create(Array.prototype)
+      ARRAY_METHODS.forEach(method => {
+        // 只改变 ARRAY_METHODS 罗列的这部分，保证数组中其他属性不变
+        array_methods[method] = function () {
+          console.log(`调用拦截的${method}方法`)
+          // arguments 伪数组
+          ;[...arguments].forEach(arg => {
+            setData(arg)
+          })
+          return Array.prototype[method].apply(this, arguments)
+        }
+      })
+      return array_methods
+    }
+    
+    // 4、变量赋值未响应式化，如何处理？？？
+    //  解决：在响应式化方法中，set 方法中处理 value
+    let arr = []
+    arr.__proto__ = setArrMethodsByProto()
+  </script>
+</body>
+</html>

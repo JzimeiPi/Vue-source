@@ -1,0 +1,59 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Document</title>
+</head>
+<body>
+  <script>
+    // 2、获取指定路径的值 xx.yy.zz
+    function getValueByPath(obj, path) {
+      let paths = path.split('.')
+      let res = obj
+      let k
+      while (k = paths.shift()) {
+        res = res[k]
+      }
+      return res
+    }
+    let obj = {
+      a: {
+        b: {
+          c: {
+            d: 'helle obj'
+          }
+        }
+      }
+    }
+    console.log(getValueByPath(obj, 'a.b'))
+
+    // 1、取出数组中不重复的值
+    function filterArr(arr) {
+      let tmp = []
+      let result = []
+      for(let i = 0; i < arr.length; i++) {
+        let count = 0
+        if (tmp.some(t => t === arr[i])) {
+          break
+        }
+        for(let j = i + 1; j < arr.length; j++) {
+          if (arr[i] === arr[j]) {
+            tmp.push(arr[j])
+            count++
+            break
+          }
+        }
+        if (!count) {
+          result.push(arr[i])
+        }
+      }
+      console.log(result)
+    }
+    let arr = [1, 2, 3, 6, 2, 3, 1, 3]
+    filterArr(arr)
+
+  </script>
+</body>
+</html>

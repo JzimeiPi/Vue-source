@@ -1,0 +1,34 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>vue source</title>
+  <script src="./node_modules/vue/dist/vue.js"></script>
+</head>
+<body>
+  <h1>Vue使用步骤--模版解析：</h1>
+  <div>Vue模版解析原理</div>
+
+  <!-- 1. 页面模版 -->
+  <div id="root">{{name}}</div>
+  <script>
+    // 未经过Vue解析的模版标签
+    console.log( root )
+
+    // 2. vue实例
+    const app = new Vue({
+      el: '#root',
+      data: {
+        name: 'vue source'
+      }
+    })
+
+    // 经过Vue解析的模版标签
+    console.log( root )
+
+    // 3.挂载vue实例到模版 
+  </script>
+</body>
+</html>

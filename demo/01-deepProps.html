@@ -1,0 +1,102 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>vue source</title>
+  <script src="./node_modules/vue/dist/vue.js"></script>
+</head>
+<body>
+  <h1>Vue--模版中链式调用的 插值（{{xxx.yyy.zzz}}） 解析</h1>
+  
+  <!-- 1. 页面模版 -->
+  <div id="root">
+    <div>{{info.type}}</div>
+    <p>{{info.users.name}}: {{info.users.msg}}</p>
+  </div>
+  <script>
+    // 2. Vue执行流程（实例）
+
+    // 深层次变量值获取（对象中链式调用）
+    function getValueByPath(obj, path) {
+      let paths = path.split('.')
+      let res = obj
+      let k
+      while (k = paths.shift()) {
+        res = res[k]
+      }
+      return res
+    }
+    // 将数据替换到模版中
+    function compiler(tpl, data) {
+      const rule = /\{\{(.+?)\}\}/g
+      let childNodes = tpl.childNodes //子元素
+      for (let i = 0; i < childNodes.length; i++) {
+        let nodeType = childNodes[i].nodeType
+        // 1-元素 3-文本节点
+        if (nodeType === 3) {
+          // 文本节点 直接判断有没插值表达式 {{}}
+          let txt = childNodes[i].nodeValue
+          // replace使用正则匹配一次，函数就调用一次
+          // 函数第 0 个参数表示匹配到的内容
+          // 函数第 n 个参数表示正则中的第n组
+          txt = txt.replace(rule, function(_, g) {
+            let path = g.trim()
+            return getValueByPath(data, path)
+          })
+          // txt现在和DOM是没有关系的
+          childNodes[i].nodeValue = txt
+        } else if (nodeType === 1) {
+          // 递归
+          compiler(childNodes[i], data)
+        }
+      }
+    }
+
+    // 构造函数
+    function JGVue(option) {
+      this._el = option.el
+      this._data = option.data
+      // 准备模版
+      this.$el = this._templateDOM = document.querySelector(this._el)
+      this._parent = this._templateDOM.parentNode
+      // 渲染
+      this.render()
+    }
+
+    // 2.1 渲染 得到html放到页面中
+    JGVue.prototype.render = function() {
+      this.compiler()
+    }
+    // 2.2 模版数据结合得到真正DOM元素
+    JGVue.prototype.compiler = function() {
+      // 用模版拷贝得到一个 准DOM
+      let realHTMLDOM = this._templateDOM.cloneNode(true)
+      compiler(realHTMLDOM, this._data)
+      this.update(realHTMLDOM)
+    }
+    // 将DOM元素替换到页面中
+    JGVue.prototype.update = function(real) { 
+      this._parent.replaceChild(real, this.$el)
+    }
+
+    // 调用
+    let data = {
+      info: {
+        type: 'source',
+        users: {
+          name: 'Vue',
+          msg: 'Hello'
+        }
+      }
+    }
+    new JGVue({
+      el: '#root',
+      data
+    })
+
+    // 3.挂载vue实例到模版 
+  </script>
+</body>
+</html>
