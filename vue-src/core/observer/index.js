@@ -160,7 +160,7 @@ export function defineReactive (
     get: function reactiveGetter () {
       const value = getter ? getter.call(obj) : val
       if (Dep.target) {
-        dep.depend()
+        dep.depend()  //依赖收集
         if (childOb) {
           childOb.dep.depend()
           if (Array.isArray(value)) {
@@ -173,6 +173,7 @@ export function defineReactive (
     set: function reactiveSetter (newVal) {
       const value = getter ? getter.call(obj) : val
       /* eslint-disable no-self-compare */
+      // 值没有发生变化，不派发更新
       if (newVal === value || (newVal !== newVal && value !== value)) {
         return
       }
@@ -183,12 +184,13 @@ export function defineReactive (
       // #7981: for accessor properties without setter
       if (getter && !setter) return
       if (setter) {
+        // 保证已经定义对 set方法可以被继承下来，不会丢失
         setter.call(obj, newVal)
       } else {
         val = newVal
       }
-      childOb = !shallow && observe(newVal)
-      dep.notify()
+      childOb = !shallow && observe(newVal) //对新值响应式化
+      dep.notify()  //派发更新
     }
   })
 }

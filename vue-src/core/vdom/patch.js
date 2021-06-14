@@ -697,6 +697,17 @@ export function createPatchFunction (backend) {
     }
   }
 
+  /**
+   * 二次提交的逻辑
+   * 每次数据更新时-> 新虚拟dom -> diff旧虚拟dom -> 更新旧虚拟dom -> 同步真dom
+   * diff算法：更新旧虚拟dom实现原理：
+   * - 遍历旧虚拟dom，在新虚拟dom中找不到的，删除
+   * - 遍历新虚拟dom，在旧虚拟dom中找不到的，添加至旧虚拟dom
+   * 
+   * 每一个虚拟dom都和页面中dom建立一一对应关系
+   * 我们只需将 虚拟dom和真dom 建立一个更新的关系
+   * 递归触发每个虚拟dom的update方法，来更新真实的dom的数据
+   */
   return function patch (oldVnode, vnode, hydrating, removeOnly) {
     if (isUndef(vnode)) {
       if (isDef(oldVnode)) invokeDestroyHook(oldVnode)

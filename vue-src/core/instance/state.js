@@ -45,14 +45,20 @@ export function proxy (target: Object, sourceKey: string, key: string) {
   Object.defineProperty(target, key, sharedPropertyDefinition)
 }
 
+/**
+ * 初始化 数据状态
+ */
 export function initState (vm: Component) {
   vm._watchers = []
   const opts = vm.$options
   if (opts.props) initProps(vm, opts.props)
+  // 处理方法成员
   if (opts.methods) initMethods(vm, opts.methods)
+  // 处理状态：响应式化就在这里
   if (opts.data) {
     initData(vm)
   } else {
+    // 数据代理
     observe(vm._data = {}, true /* asRootData */)
   }
   if (opts.computed) initComputed(vm, opts.computed)
@@ -102,6 +108,8 @@ function initProps (vm: Component, propsOptions: Object) {
     // static props are already proxied on the component's prototype
     // during Vue.extend(). We only need to proxy props defined at
     // instantiation here.
+
+    // props中数据代理到 Vue实例
     if (!(key in vm)) {
       proxy(vm, `_props`, key)
     }
@@ -109,8 +117,10 @@ function initProps (vm: Component, propsOptions: Object) {
   toggleObserving(true)
 }
 
-function initData (vm: Component) {
+function  initData (vm: Component) {
   let data = vm.$options.data
+  // 在Vue中，如果是Vue实例中传入data，一般是对象
+  // 如果是组件中，我们的data一般是一个函数，返回一个对象
   data = vm._data = typeof data === 'function'
     ? getData(data, vm)
     : data || {}
@@ -144,15 +154,22 @@ function initData (vm: Component) {
         vm
       )
     } else if (!isReserved(key)) {
+      // data中数据代理到Vue实例
       proxy(vm, `_data`, key)
     }
   }
   // observe data
+  // 响应式化
   observe(data, true /* asRootData */)
 }
 
 export function getData (data: Function, vm: Component): any {
   // #7573 disable dep collection when invoking data getters
+  /**
+   * 此时是Vue的初始化，模版还没有渲染，
+   * 所以不需要依赖收集，这里pushTarget传入一个空，全局watcher就设置为undefined，
+   * 依赖收集的时候会判断Dep.target存在才执行
+   */
   pushTarget()
   try {
     return data.call(vm, vm)
@@ -283,6 +300,7 @@ function initMethods (vm: Component, methods: Object) {
         )
       }
     }
+    // 将方法属性中到成员绑定了上下文，直接挂到了Vue实例中
     vm[key] = typeof methods[key] !== 'function' ? noop : bind(methods[key], vm)
   }
 }

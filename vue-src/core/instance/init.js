@@ -10,7 +10,7 @@ import { initLifecycle, callHook } from './lifecycle'
 import { initProvide, initInjections } from './inject'
 import { extend, mergeOptions, formatComponentName } from '../util/index'
 
-let uid = 0
+let uid = 0   //Vue中每个组件都有一个唯一标识
 
 export function initMixin (Vue: Class<Component>) {
   Vue.prototype._init = function (options?: Object) {
@@ -49,14 +49,14 @@ export function initMixin (Vue: Class<Component>) {
     }
     // expose real self
     vm._self = vm
-    initLifecycle(vm)
-    initEvents(vm)
-    initRender(vm)
-    callHook(vm, 'beforeCreate')
-    initInjections(vm) // resolve injections before data/props
-    initState(vm)
+    initLifecycle(vm)   //初始化 生命周期的一些状态变量
+    initEvents(vm)      //初始化 事件的容器
+    initRender(vm)      //初始化 创建元素的方法
+    callHook(vm, 'beforeCreate')  //调用生命周期函数
+    initInjections(vm) // resolve injections before data/props  //初始化注入器
+    initState(vm)   //初始化 状态数据（data, property 。。。）
     initProvide(vm) // resolve provide after data/props
-    callHook(vm, 'created')
+    callHook(vm, 'created')   //生命周期函数的调用
 
     /* istanbul ignore if */
     if (process.env.NODE_ENV !== 'production' && config.performance && mark) {
@@ -65,7 +65,14 @@ export function initMixin (Vue: Class<Component>) {
       measure(`vue ${vm._name} init`, startTag, endTag)
     }
 
+    // ^ 前面代码都是 组件的创建
+    
+    // 组件挂载之前都做了什么？？？
+
+    // 组件挂载
     if (vm.$options.el) {
+      // 先调用扩展的 $mount 方法，生成render
+      // 再调用原始的 $mount 方法，获得元素，再调用mountComponent方法
       vm.$mount(vm.$options.el)
     }
   }

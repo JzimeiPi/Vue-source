@@ -129,9 +129,9 @@ export default class Watcher {
     const id = dep.id
     if (!this.newDepIds.has(id)) {
       this.newDepIds.add(id)
-      this.newDeps.push(dep)
-      if (!this.depIds.has(id)) {
-        dep.addSub(this)
+      this.newDeps.push(dep)  //watcher关联dep
+      if (!this.depIds.has(id)) { 
+        dep.addSub(this)  //dep关联watcher
       }
     }
   }
@@ -143,6 +143,7 @@ export default class Watcher {
     let i = this.deps.length
     while (i--) {
       const dep = this.deps[i]
+      // 在二次提交中归档，就是让 旧的deps 和 新的newDeps 一致
       if (!this.newDepIds.has(dep.id)) {
         dep.removeSub(this)
       }
@@ -163,12 +164,12 @@ export default class Watcher {
    */
   update () {
     /* istanbul ignore else */
-    if (this.lazy) {
+    if (this.lazy) {  //主要针对计算属性，一般用于求值运算
       this.dirty = true
-    } else if (this.sync) {
+    } else if (this.sync) { //同步，表示立即计算，主要用于SSR
       this.run()
     } else {
-      queueWatcher(this)
+      queueWatcher(this)  //一般浏览器中的异步运行，本质上就是异步执行run()
     }
   }
 

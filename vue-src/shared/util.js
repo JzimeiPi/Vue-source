@@ -1,3 +1,8 @@
+/**
+ * 这里都是 工具方法
+ * 代码中可能随处可用
+ */
+
 /* @flow */
 
 export const emptyObject = Object.freeze({})
@@ -23,6 +28,9 @@ export function isFalse (v: any): boolean %checks {
 /**
  * Check if value is primitive.
  */
+/**
+ * 是不是基本类型
+ */
 export function isPrimitive (value: any): boolean %checks {
   return (
     typeof value === 'string' ||
@@ -38,6 +46,9 @@ export function isPrimitive (value: any): boolean %checks {
  * Objects from primitive values when we know the value
  * is a JSON-compliant type.
  */
+/**
+ * 是不是引用类型
+ */
 export function isObject (obj: mixed): boolean %checks {
   return obj !== null && typeof obj === 'object'
 }
@@ -46,7 +57,9 @@ export function isObject (obj: mixed): boolean %checks {
  * Get the raw type string of a value, e.g., [object Object].
  */
 const _toString = Object.prototype.toString
-
+/**
+ * 获取 值 具体类型 (ex: Array)
+ */
 export function toRawType (value: any): string {
   return _toString.call(value).slice(8, -1)
 }
@@ -55,10 +68,15 @@ export function toRawType (value: any): string {
  * Strict object type check. Only returns true
  * for plain JavaScript objects.
  */
+/**
+ * 是否是 对象
+ */
 export function isPlainObject (obj: any): boolean {
   return _toString.call(obj) === '[object Object]'
 }
-
+/**
+ * 是否是 正则
+ */
 export function isRegExp (v: any): boolean {
   return _toString.call(v) === '[object RegExp]'
 }
@@ -82,6 +100,10 @@ export function isPromise (val: any): boolean {
 /**
  * Convert a value to a string that is actually rendered.
  */
+/**
+ * 将 值 转换为 String类型
+ * 这里将 简单类型：Array、Object，转换为 JSON字符串
+ */
 export function toString (val: any): string {
   return val == null
     ? ''
@@ -103,6 +125,9 @@ export function toNumber (val: string): number | string {
  * Make a map and return a function for checking if a key
  * is in that map.
  */
+/**
+ * 生成一个带有缓存的函数，判断数据是否是缓存中的数据
+ */
 export function makeMap (
   str: string,
   expectsLowerCase?: boolean
@@ -120,10 +145,16 @@ export function makeMap (
 /**
  * Check if a tag is a built-in tag.
  */
+/**
+ * 是否是 内置标签
+ */
 export const isBuiltInTag = makeMap('slot,component', true)
 
 /**
  * Check if an attribute is a reserved attribute.
+ */
+/**
+ * 是否是 保留属性
  */
 export const isReservedAttribute = makeMap('key,ref,slot,slot-scope,is')
 
@@ -142,6 +173,9 @@ export function remove (arr: Array<any>, item: any): Array<any> | void {
 /**
  * Check whether an object has the property.
  */
+/**
+ * 是否是该对象的 自身属性
+ */
 const hasOwnProperty = Object.prototype.hasOwnProperty
 export function hasOwn (obj: Object | Array<*>, key: string): boolean {
   return hasOwnProperty.call(obj, key)
@@ -149,6 +183,9 @@ export function hasOwn (obj: Object | Array<*>, key: string): boolean {
 
 /**
  * Create a cached version of a pure function.
+ */
+/**
+ * 返回一个带有缓存的函数 （闭包）
  */
 export function cached<F: Function> (fn: F): F {
   const cache = Object.create(null)
@@ -161,6 +198,9 @@ export function cached<F: Function> (fn: F): F {
 /**
  * Camelize a hyphen-delimited string.
  */
+/**
+ * 将连字符串转换为小驼峰 （xx-yy-zz -> xxYyZz）
+ */
 const camelizeRE = /-(\w)/g
 export const camelize = cached((str: string): string => {
   return str.replace(camelizeRE, (_, c) => c ? c.toUpperCase() : '')
@@ -169,12 +209,18 @@ export const camelize = cached((str: string): string => {
 /**
  * Capitalize a string.
  */
+/**
+ * 首字母大写
+ */
 export const capitalize = cached((str: string): string => {
   return str.charAt(0).toUpperCase() + str.slice(1)
 })
 
 /**
  * Hyphenate a camelCase string.
+ */
+/**
+ * 将大小驼峰转换为连接字符串（XxxYYZzz -> xxx-yy-zz）
  */
 const hyphenateRE = /\B([A-Z])/g
 export const hyphenate = cached((str: string): string => {
@@ -282,13 +328,20 @@ export function genStaticKeys (modules: Array<ModuleOptions>): string {
  * Check if two values are loosely equal - that is,
  * if they are plain objects, do they have the same shape?
  */
+/**
+ * 判断 对象是否相等 (Object)
+ * 1、a中的成员是否在b中存在，且值相等
+ * 2、b中的成员是否在a中存在，且值相等
+ * 3、是引用类型，则递归
+ * 4、最终要比较字符串是否相等
+ */
 export function looseEqual (a: any, b: any): boolean {
-  if (a === b) return true
-  const isObjectA = isObject(a)
-  const isObjectB = isObject(b)
+  if (a === b) return true  //地址相同
+  const isObjectA = isObject(a) //是否引用类型
+  const isObjectB = isObject(b) 
   if (isObjectA && isObjectB) {
     try {
-      const isArrayA = Array.isArray(a)
+      const isArrayA = Array.isArray(a) //是否数组
       const isArrayB = Array.isArray(b)
       if (isArrayA && isArrayB) {
         return a.length === b.length && a.every((e, i) => {
@@ -331,6 +384,9 @@ export function looseIndexOf (arr: Array<mixed>, val: mixed): number {
 
 /**
  * Ensure a function is called only once.
+ */
+/**
+ * 只执行一次的函数
  */
 export function once (fn: Function): Function {
   let called = false
