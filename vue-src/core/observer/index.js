@@ -184,7 +184,7 @@ export function defineReactive (
       // #7981: for accessor properties without setter
       if (getter && !setter) return
       if (setter) {
-        // 保证已经定义对 set方法可以被继承下来，不会丢失
+        // 保证已经定义的 set方法可以被继承下来，不会丢失
         setter.call(obj, newVal)
       } else {
         val = newVal

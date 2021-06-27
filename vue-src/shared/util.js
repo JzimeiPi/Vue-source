@@ -1,5 +1,7 @@
 /**
  * 这里都是 工具方法
+ */
+/**
  * 代码中可能随处可用
  */
 
@@ -102,7 +104,7 @@ export function isPromise (val: any): boolean {
  */
 /**
  * 将 值 转换为 String类型
- * 这里将 简单类型：Array、Object，转换为 JSON字符串
+ * 这里将 引用类型：Array、Object，转换为 JSON字符串
  */
 export function toString (val: any): string {
   return val == null

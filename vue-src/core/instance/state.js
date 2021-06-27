@@ -58,7 +58,7 @@ export function initState (vm: Component) {
   if (opts.data) {
     initData(vm)
   } else {
-    // 数据代理
+    // 响应式化
     observe(vm._data = {}, true /* asRootData */)
   }
   if (opts.computed) initComputed(vm, opts.computed)
@@ -117,6 +117,9 @@ function initProps (vm: Component, propsOptions: Object) {
   toggleObserving(true)
 }
 
+/**
+ * 数据处理
+ */
 function  initData (vm: Component) {
   let data = vm.$options.data
   // 在Vue中，如果是Vue实例中传入data，一般是对象
@@ -163,13 +166,13 @@ function  initData (vm: Component) {
   observe(data, true /* asRootData */)
 }
 
+/**
+ * 此时是Vue的初始化，模版还没有渲染，
+ * 所以不需要依赖收集，这里pushTarget传入一个空，全局watcher就设置为undefined，
+ * 依赖收集的时候会判断Dep.target存在才执行
+ */
 export function getData (data: Function, vm: Component): any {
   // #7573 disable dep collection when invoking data getters
-  /**
-   * 此时是Vue的初始化，模版还没有渲染，
-   * 所以不需要依赖收集，这里pushTarget传入一个空，全局watcher就设置为undefined，
-   * 依赖收集的时候会判断Dep.target存在才执行
-   */
   pushTarget()
   try {
     return data.call(vm, vm)

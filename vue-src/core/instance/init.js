@@ -51,7 +51,7 @@ export function initMixin (Vue: Class<Component>) {
     vm._self = vm
     initLifecycle(vm)   //初始化 生命周期的一些状态变量
     initEvents(vm)      //初始化 事件的容器
-    initRender(vm)      //初始化 创建元素的方法
+    initRender(vm)      //初始化 创建元素的方法 （创建Dep，依赖收集）
     callHook(vm, 'beforeCreate')  //调用生命周期函数
     initInjections(vm) // resolve injections before data/props  //初始化注入器
     initState(vm)   //初始化 状态数据（data, property 。。。）
@@ -72,7 +72,7 @@ export function initMixin (Vue: Class<Component>) {
     // 组件挂载
     if (vm.$options.el) {
       // 先调用扩展的 $mount 方法，生成render
-      // 再调用原始的 $mount 方法，获得元素，再调用mountComponent方法
+      // 再调用原始的 $mount 方法，获得元素，再调用 mountComponent 方法
       vm.$mount(vm.$options.el)
     }
   }
