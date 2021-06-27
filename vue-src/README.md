@@ -26,7 +26,7 @@
 - 初始化生命周期的状态
 - 初始化事件容器
 - 初始化创建元素方法
-    创建了Dep
+    创建了Dep，用于watcher发布订阅模式，依赖收集
 - beforeCreate ，初始化接下来开始。。。
 - 初始化vue组件内的属性
   - props
@@ -36,7 +36,20 @@
   - computed
   - watch
 - created ，现在初始化已经完成，vue内属性全部可以访问
-- 准备 render 方法
-- beforeMount ，这时候内存中保存了要渲染到页面的模版，接下来开始挂载
+- 判断有无 el，无：执行结束，等待手动调用 $mount 方法
+- 准备 render 方法，判断有无 render 方法：
+    - 有：直接进入挂载
+    - 无：判断有无template，无就用el转换为template，再将其转换为render函数
+- beforeMount ，这时候内存中保存了要渲染的 render 函数
 - 将vue的 渲染方法 render 添加到 Watcher 中
+- 开始挂载，render函数内部：
+    - 首先，生成一个虚拟dom，保存
+    - render函数返回真实dom，保存
+    - 真实dom替换vm.$el, $el append到页面
 - mounted ，挂载完成
+    页面dom可见
+- beforeUpdate 
+    - 生成一个新的虚拟dom，和之前的旧虚拟dom 进行diff，得到一个最小的更新范围，更新 render函数中的数据，返回真实dom
+    - 旧的虚拟dom替换成新的
+- updated
+    - 页面重新渲染完成
